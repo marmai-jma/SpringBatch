@@ -39,7 +39,7 @@ public class ImportStepConfigTest {
     public void importJob() throws Exception {
         //Given
         final JobParameters jobParameters = new JobParametersBuilder(testUtils.getUniqueJobParameters())
-                .addString("input-file","src/main.ressources/sample-data.csv")
+                .addString("input-file","src/main.resources/sample-data.csv")
                 .toJobParameters();
         //when
         final JobExecution jobExec = testUtils.launchJob(jobParameters);
