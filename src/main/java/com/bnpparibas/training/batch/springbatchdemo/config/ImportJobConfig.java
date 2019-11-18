@@ -33,6 +33,9 @@ public class ImportJobConfig {
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
 
+    @Autowired
+    private MaClasseMetier maClasseMetier;
+
     @Bean(name = "importJob") // déclarer un JOB - sera appelé par le framework via le jobLaucher qui cherchera
         // tous les job qu'il a dans son repository
     public Job importBookJob (final Step importStep, final JobCompletionNotificationListener listener){
@@ -70,15 +73,15 @@ public class ImportJobConfig {
                 .resource(new FileSystemResource(inputFile)) // ressource fichier
                 .delimited() // fichier csv
                 .delimiter(";") // delimiteur ;
-                .names(new String[] { "title", "author", "isbn", "publisher","publishedOn" }) //ligne de titre avec entete des colonnes
-                .linesToSkip(1) // on saute la première ligne qui contient les entêtes
+                .names(new String[] { "title", "author", "isbn", "publisher","publishedOn" })
+                // dit dans quel ordre on va trouver les données de DTO dans le fichier
+                .linesToSkip(1) // on saute la première ligne parce qu'elle contient les entêtes - on ne verifie pas cela
                 .fieldSetMapper(new BeanWrapperFieldSetMapper<BookDto>() {
                     {
                         setTargetType(BookDto.class);
                     }
                 }).build();
     }
-
 
     //importProcessor
     @Bean
@@ -87,7 +90,7 @@ public class ImportJobConfig {
             @Override
             public BookDto process(final BookDto book) throws Exception {
                 LOGGER.info("Processing {}", book);
-                return book;
+                return maClasseMetier.maMethodeMetier(book);
             }
         };
     }
