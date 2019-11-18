@@ -11,8 +11,10 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
+import org.springframework.batch.item.database.JdbcBatchItemWriter;
+import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
@@ -21,6 +23,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+
+import javax.sql.DataSource;
 
 @Configuration
 @EnableBatchProcessing
@@ -50,7 +54,7 @@ public class ImportJobConfig {
     }
 
     @Bean
-    public Step importStep(ItemReader<BookDto> importReader,
+    public Step importStep(final FlatFileItemReader<BookDto> importReader,
                            final ItemProcessor<BookDto,BookDto> importProcessor, // injecté le Bean par Spring
                            final ItemWriter<BookDto> importWriter){
         return (Step) stepBuilderFactory.get("import-step")
@@ -96,5 +100,13 @@ public class ImportJobConfig {
     }
 
     //importItemWriter
-
+    @Bean
+    public JdbcBatchItemWriter<BookDto> importWriter(final DataSource dataSource){
+        return new JdbcBatchItemWriterBuilder<BookDto>()
+                .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
+                .sql("INSERT INTO book (title, author, isbn, publisher, year)"
+                + "VALUES(:title, :author, :isbn, :publisher, :publishedOn")
+                .dataSource(dataSource)
+                .build();
+    }
 }
