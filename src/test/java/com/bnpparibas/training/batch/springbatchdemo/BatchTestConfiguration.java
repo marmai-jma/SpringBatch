@@ -29,7 +29,7 @@ public class BatchTestConfiguration {
                 .setType(EmbeddedDatabaseType.H2)
                 .addScript("classpath:org/springframework/batch/core/schema-drop-h2.sql")
                 .addScript("classpath:org/springframework/batch/core/schema-h2.sql")
-                .addScripts("schema-all.sql") //
+                .addScripts("schema-all.sql","data.sql") //
                 .build();
     }
 }
