@@ -11,15 +11,8 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
-import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
-import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
-import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
-import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.FlatFileItemWriter;
-import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor;
@@ -53,10 +46,9 @@ public class ExportJobConfig {
     private DataSource dataSource;
 
     @Bean(name = "exportJob")
-    public Job exportBookJob (final Step exportStep, final JobCompletionNotificationListener listener){
+    public Job exportBookJob (final Step exportStep){
         return jobBuilderFactory.get("export-Job")
                 .incrementer(new RunIdIncrementer())
-                .listener(listener)
                 .flow(exportStep)
                 .end()
                 .build();
@@ -85,7 +77,6 @@ public class ExportJobConfig {
     }
 
 
-
     //exportProcessor
     @Bean
     public ItemProcessor<BookDto, BookDto> exportProcessor() {
@@ -101,15 +92,15 @@ public class ExportJobConfig {
     // exportWriter
     @StepScope // Mandatory for using jobParameters​- sans cela, pas possible de passer des paramètres
     @Bean
-    public FlatFileItemWriter<BookDto> exportWriter(@Value("#{jobParameters['output-file']}") final String ouputFile) {
+    public FlatFileItemWriter<BookDto> exportWriter(@Value("#{jobParameters['output-file']}") final String outputFile) {
         return new FlatFileItemWriterBuilder<BookDto>()
                 .name("bookItemWriter") //​
-                .resource(new FileSystemResource(ouputFile)) // ressource fichier
+                .resource(new FileSystemResource(outputFile)) // ressource fichier
                 .lineAggregator(new DelimitedLineAggregator<BookDto>(){
                     {
                         setDelimiter(",");
                         setFieldExtractor(new BeanWrapperFieldExtractor<BookDto>(){
-                            {
+                            { // attributs du DTO
                                 setNames(new String[]{"title", "author", "isbn", "publisher", "publishedOn"});
                             }
                         });
@@ -120,15 +111,15 @@ public class ExportJobConfig {
 
     private class BookRowMapper implements RowMapper<BookDto> {
         @Override
-        public BookDto mapRow(final ResultSet resultSet, final int i) throws SQLException { //ResultSet encapsule le resultat d'une requete SQL
+        public BookDto mapRow(final ResultSet resultSet, final int rowNum) throws SQLException { //ResultSet encapsule le resultat d'une requete SQL
             // final bonne pratique pour indiquer que les variables ne sont pas modifiées par la méthode
-            BookDto bookDto  = new BookDto();
-            bookDto.setTitle(resultSet.getString("title"));  // on peut aussi ecrire getString ("title") avec le nom de colonne
-            bookDto.setAuthor(resultSet.getString("author")); //mettre le rang dans la table en commençant par 0 pour 1ere colonne
-            bookDto.setIsbn(resultSet.getString("isbn"));
-            bookDto.setPublisher(resultSet.getString("publisher"));
-            bookDto.setPublishedOn(resultSet.getInt("publishedOn"));
-            return bookDto;
+            final BookDto book  = new BookDto();
+            book.setTitle(resultSet.getString("title"));  // on peut aussi ecrire getString ("title") avec le nom de colonne
+            book.setAuthor(resultSet.getString("author")); //mettre le rang dans la table en commençant par 0 pour 1ere colonne
+            book.setIsbn(resultSet.getString("isbn"));
+            book.setPublisher(resultSet.getString("publisher"));
+            book.setPublishedOn(resultSet.getInt("year"));
+            return book;
         }
     }
 
