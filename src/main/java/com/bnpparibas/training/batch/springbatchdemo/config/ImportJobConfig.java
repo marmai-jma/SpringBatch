@@ -104,8 +104,7 @@ public class ImportJobConfig {
     public JdbcBatchItemWriter<BookDto> importWriter(final DataSource dataSource){
         return new JdbcBatchItemWriterBuilder<BookDto>()
                 .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
-                .sql("INSERT INTO book (title, author, isbn, publisher, year)"
-                + "VALUES(:title, :author, :isbn, :publisher, :publishedOn")
+                .sql("INSERT INTO book (title, author, isbn, publisher, year) VALUES(:title, :author, :isbn, :publisher, :publishedOn)")
                 .dataSource(dataSource)
                 .build();
     }

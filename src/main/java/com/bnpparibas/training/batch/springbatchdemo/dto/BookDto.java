@@ -7,6 +7,8 @@ public class BookDto {
     private String publisher;
     private Integer publishedOn;
 
+    public BookDto() {}
+
     public BookDto(String title, String author, String isbn, String publisher, Integer publishedOn) {
         this.title = title;
         this.author = author;
